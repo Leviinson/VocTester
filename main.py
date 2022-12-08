@@ -3,7 +3,7 @@ import sys
 import json
 import random
 import logging
-from typing import Dict
+from typing import Dict, List
 from dataclasses import dataclass
 
 from PySide6 import (QtCore,
@@ -41,6 +41,8 @@ class MainWindow(QtWidgets.QWidget):
         self.setWindowTitle("Vocabulary tester")
         self.resize(500, 100)
         self.layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
+        self.number_of_correct_answers = 0
+        self.last_frame_index = 0
         self.setLayout(self.layout)
 
 
@@ -58,23 +60,24 @@ class MainWindow(QtWidgets.QWidget):
         vocabulary_words = self.get_vocabulary_words(language='pl')
         random_questions_indexes = random.sample(range(len(vocabulary_words)), len(vocabulary_words))
         sequence_entry_points = ListPoints(random_questions_indexes)
+        self.last_frame_index = sequence_entry_points.stop_index
 
         for frame_index, random_question_index in enumerate(random_questions_indexes):
-            question = vocabulary_words[random_question_index]['question']
-            answer = vocabulary_words[random_question_index]['answer']
+            question = vocabulary_words[random_question_index]['foreign_word']
+            answer = vocabulary_words[random_question_index]['translation']
             match frame_index:
-                case sequence_entry_points.start_index:
+                case 0:
                     self.create_question_frame(question = question, answer = answer,
                                                is_first = True, current_frame_index = frame_index)
-                    self.layout.itemAt(sequence_entry_points.start_index).widget().show()
-                case sequence_entry_points.stop_index:
+                    self.layout.itemAt(0).widget().show()
+                case self.last_frame_index:
                     self.create_question_frame(question = question, answer = answer,
                                                is_last = True, current_frame_index = frame_index)
                 case _:
                     self.create_question_frame(question = question, answer = answer, current_frame_index = frame_index)
         
 
-    def get_vocabulary_words(self, language: str) -> Dict:
+    def get_vocabulary_words(self, language: str) -> List:
         '''
         Passes language abbreviature,
         returns deserialized dictionary from json to py-dict,
@@ -83,7 +86,9 @@ class MainWindow(QtWidgets.QWidget):
             question: text
             answer: text
 
-        Attributes:
+        Parameters:
+            language: str
+                language abbreviature, such as: (en, pl, ru, ua etc.)
         '''
         try:
             with open('%s/vocabulary_%s.json' % (os.getcwd(), language)) as vocabulary:
@@ -96,7 +101,7 @@ class MainWindow(QtWidgets.QWidget):
 
     
     def create_question_frame(self, current_frame_index, question: str, answer: str,
-                         is_first: bool = False, is_last: bool = False):
+                         is_first: bool = False, is_last: bool = False) -> None:
         '''
         '''
         frame = QuestionFrame(question = question, answer = answer,
@@ -105,6 +110,10 @@ class MainWindow(QtWidgets.QWidget):
                               main_window = self)
         self.layout.addWidget(frame)
         frame.hide()
+
+    
+    def create_results_frame(self):
+        ...
 
 
 class QuestionFrame(QtWidgets.QFrame):
@@ -160,20 +169,20 @@ class QuestionFrame(QtWidgets.QFrame):
             creates "ok" button; pins main window as parent for this widget.
 
         init_button_next(self):
-            creates "next" button; pins current frame as parent for this widget
+            creates "next" button; pins current frame as a parent for this widget
             by default.
 
         init_button_back(self):
-            creates "back" button; pins current frame as parent for this widget
+            creates "back" button; pins current frame as a parent for this widget
             by default.
         
         init_button_results(self):
-            creates "results" button; pins current frame as parent for this widget
+            creates "results" button; pins current frame as a parent for this widget
             by default.
     '''
     def __init__(self, main_window: MainWindow, question: str, answer: str,
                        currect_frame_index: int, is_first: bool = False,
-                       is_last: bool = False) -> None:
+                       is_last: bool = False, is_results_frame: bool = False) -> None:
         super().__init__()
         self.layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self)
         self.init_variables(is_first, is_last,
@@ -185,7 +194,8 @@ class QuestionFrame(QtWidgets.QFrame):
                    answer = answer,
                    is_first = is_first,
                    is_last = is_last,
-                   main_window = main_window).init_callbacks()
+                   main_window = main_window,
+                   is_results_frame = is_results_frame).init_callbacks()
 
 
     def init_variables(self, is_first: bool, is_last: bool,
@@ -327,12 +337,12 @@ class QuestionFrame(QtWidgets.QFrame):
     def init_button_next(self):
         '''
         Creates "next" button;
-        pins current frame as parent for this widget
+        pins current frame as a parent for this widget
         by default.
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
         self.button_next = QtWidgets.QPushButton(parent = self)
         self.button_next.setText("Next")
@@ -342,12 +352,12 @@ class QuestionFrame(QtWidgets.QFrame):
     def init_button_back(self):
         '''
         Creates "back" button;
-        pins current frame as parent for this widget
+        pins current frame as a parent for this widget
         by default.
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
         self.button_back = QtWidgets.QPushButton(parent = self)
         self.button_back.setText("Back")
@@ -357,12 +367,12 @@ class QuestionFrame(QtWidgets.QFrame):
     def init_button_results(self):
         '''
         Creates "results" button;
-        pins current frame as parent for this widget
+        pins current frame as a parent for this widget
         by default.
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
         self.button_results = QtWidgets.QPushButton(parent = self)
         self.button_results.setText("Results")
@@ -374,8 +384,57 @@ class QuestionFrame(QtWidgets.QFrame):
 
 
 class ResultsFrame(QtWidgets.QFrame):
-    def __init__(self) -> None:
+    def __init__(self, current_frame_index: int,
+                       main_window: MainWindow) -> None:
         super().__init__()
+        self.current_frame_index = current_frame_index
+        self.main_window = main_window
+        self.layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self)
+        self.init_frame_widgets()
+        
+        self.setWindowTitle('Rezultaty')
+        Callbacker(main_window = main_window,
+                   frame = self,
+                   is_results_frame = True).init_callbacks()
+
+
+    def init_frame_widgets(self):
+        self.init_results_label()
+        self.init_nav_menu()
+
+    
+    def init_results_label(self):
+        self.results_label = QtWidgets.QLabel(parent = self)
+        self.results_label.setText("Ilość poprawnych odpowiedzi: %s" % self.main_window.number_of_correct_answers)
+        self.layout.addWidget(self.results_label, alignment = QtCore.Qt.AlignmentFlag.AlignCenter)
+
+    
+    def init_nav_menu(self):
+        self.nav_menu = QtWidgets.QHBoxLayout()
+        self.layout.addLayout(self.nav_menu, stretch = 0)
+        self.init_button_back()
+        self.init_button_close()
+
+
+    def init_button_back(self):
+        '''
+        Creates "back" button;
+        pins current frame as a parent for this widget
+        by default.
+
+        Parameters:
+        -----------
+            Doesn't have
+        '''
+        self.button_back = QtWidgets.QPushButton(parent = self)
+        self.button_back.setText("Back")
+        self.nav_menu.addWidget(self.button_back, alignment = QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignLeft)
+    
+
+    def init_button_close(self):
+        self.button_close = QtWidgets.QPushButton(parent = self)
+        self.button_close.setText("Close")
+        self.nav_menu.addWidget(self.button_close, alignment = QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignRight)
 
 
 class Callbacker:
@@ -402,28 +461,31 @@ class Callbacker:
         Constructs all the necessary attributes for the person object.
 
     init_callbacks() -> None:
-        Inits all the necessary callbacks for buttons of parent frame.
+        Inits all the necessary callbacks for buttons of parent frame
+        depending on the information if parent frame is first, last or results frame.
 
     
     '''
     def __init__(self, main_window: MainWindow,
                        frame: QuestionFrame,
-                       answer: str,
+                       answer: str = None,
                        is_first: bool = False,
-                       is_last: bool = False) -> None:
+                       is_last: bool = False,
+                       is_results_frame = False) -> None:
         self.init_variables(main_window = main_window,
                             frame = frame,
                             answer = answer,
                             is_first = is_first,
-                            is_last = is_last)
-        self.init_callbacks()
+                            is_last = is_last,
+                            is_results_frame = is_results_frame)
     
 
     def init_variables(self, main_window,
                              frame,
                              answer,
                              is_first,
-                             is_last) -> None:
+                             is_last,
+                             is_results_frame) -> None:
         '''
         Constructs all the necessary attributes for the person object.
 
@@ -443,31 +505,39 @@ class Callbacker:
         self.answer = answer
         self.is_first = is_first
         self.is_last = is_last
+        self.is_results_frame = is_results_frame
 
 
     def init_callbacks(self) -> None:
         '''
         Inits all the necessary callbacks for buttons of parent frame
-        depending on the information if parent frame is first, last or between.
+        depending on the information if parent frame is first, last or results frame.
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
-        match self.is_first, self.is_last:
-            case True, False:
-                self.set_callback_for_button_ok()
-                self.set_callback_for_button_next()
+
+        match self.is_results_frame:
+            case False:
+                match self.is_first, self.is_last:
+                    case True, False:
+                        self.set_callback_for_button_ok()
+                        self.set_callback_for_button_next()
+                    
+                    case False, True:
+                        self.set_callback_for_button_back()
+                        self.set_callback_for_button_ok()
+                        self.set_callback_for_button_results()
+                    
+                    case _:
+                        self.set_callback_for_button_back()
+                        self.set_callback_for_button_ok()
+                        self.set_callback_for_button_next()
             
-            case False, True:
+            case True:
+                self.set_callback_for_button_close()
                 self.set_callback_for_button_back()
-                self.set_callback_for_button_ok()
-                self.set_callback_for_button_results()
-            
-            case _:
-                self.set_callback_for_button_back()
-                self.set_callback_for_button_ok()
-                self.set_callback_for_button_next()
         
 
     def set_callback_for_button_next(self) -> None:
@@ -478,7 +548,7 @@ class Callbacker:
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
         self.frame.button_next.clicked.connect(
             lambda: (
@@ -497,7 +567,7 @@ class Callbacker:
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
         self.frame.button_back.clicked.connect(
             lambda: (
@@ -515,7 +585,7 @@ class Callbacker:
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
         text_callback = self.define_text_callback_for_ok_button
         self.frame.button_ok.clicked.connect(
@@ -533,9 +603,24 @@ class Callbacker:
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
-        self.frame.button_results.clicked.connect(self.count_correct_answers)
+        number_of_question_frames = self.main_window.layout.count()
+        self.frame.button_results.clicked.connect(
+            lambda: (
+                self.count_correct_answers(number_of_question_frames = number_of_question_frames),
+                self.frame.hide(),
+                self.create_results_frame()
+            )
+        )
+
+    def set_callback_for_button_close(self):
+        self.frame.button_close.clicked.connect(self.main_window.close)
+
+    
+    def create_results_frame(self):
+        result_frame = ResultsFrame(self.main_window.last_frame_index + 1, self.main_window)
+        self.main_window.layout.addWidget(result_frame)
     
 
     def define_text_callback_for_ok_button(self) -> str:
@@ -545,7 +630,7 @@ class Callbacker:
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
         match self.is_user_translation_correct(self.frame, answer = self.answer):
             case True:
@@ -556,21 +641,21 @@ class Callbacker:
                 return "Pole jest nieuzupełnione"
 
     
-    def count_correct_answers(self):
+    def count_correct_answers(self, number_of_question_frames) -> None:
         '''
         Returns number of correct answers
 
         Parameters:
         -----------
-        Doesn't have
+            Doesn't have
         '''
-        number_of_question_frames = self.main_window.layout.count()
-        number_of_correct_answers = 0
+        
+        number_of_correct_answers = 1
         for frame_index in range(number_of_question_frames):
             question_frame: QuestionFrame = self.main_window.layout.itemAt(frame_index).widget()
             if question_frame.is_answer_correct:
                 number_of_correct_answers += 1
-        return number_of_correct_answers
+        self.main_window.number_of_correct_answers = number_of_correct_answers
     
 
     def is_user_translation_correct(self, frame: QuestionFrame,
