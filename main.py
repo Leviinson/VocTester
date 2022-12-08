@@ -77,11 +77,13 @@ class MainWindow(QtWidgets.QWidget):
     def get_vocabulary_words(self, language: str) -> Dict:
         '''
         Passes language abbreviature,
-        returns deserialized dictionary from json to py-dict, that
-        was dynamically switches type to list,
-        that contains dictionaries with keys:
+        returns deserialized dictionary from json to py-dict,
+        which dynamically changes the type to "list" that contains
+        dictionaries with next keys:
             question: text
             answer: text
+
+        Attributes:
         '''
         try:
             with open('%s/vocabulary_%s.json' % (os.getcwd(), language)) as vocabulary:
