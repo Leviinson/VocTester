@@ -1,40 +1,40 @@
 {
     "words_pl": [
         {
-            "question": "wnosić",
-            "answer": "вносити"
+            "foreign_word": "wnosić",
+            "translation": "вносити"
         },
         {
-            "question": "nieść",
-            "answer": "нести"
+            "foreign_word": "nieść",
+            "translation": "нести"
         },
         {
-            "question": "zawsze",
-            "answer": "завжди"
+            "foreign_word": "zawsze",
+            "translation": "завжди"
         },
         {
-            "question": "wszędzie",
-            "answer": "всюди"
+            "foreign_word": "wszędzie",
+            "translation": "всюди"
         },
         {
-            "question": "kłaść",
-            "answer": "класти"
+            "foreign_word": "kłaść",
+            "translation": "класти"
         },
         {
-            "question": "kłocić się",
-            "answer": "сваритися"
+            "foreign_word": "kłocić się",
+            "translation": "сваритися"
         },
         {
-            "question": "naprzeciwko",
-            "answer": "навпроти"
+            "foreign_word": "naprzeciwko",
+            "translation": "навпроти"
         },
         {
-            "question": "wkrótce",
-            "answer": "скоро"
+            "foreign_word": "wkrótce",
+            "translation": "скоро"
         },
         {
-            "question": "pozwól",
-            "answer": "дозволь"
+            "foreign_word": "pozwól",
+            "translation": "дозволь"
         }
     ]
 }
