@@ -54,10 +54,13 @@ class Callbacker:
         ----------
             main_window: MainWindow
                 represents link to main window
+
             frame: QuestionFrame
                 represents link to parent frame
+
             is_first: bool
                 represents boolean value, if parent frame is first question
+                
             is_last: bool
                 represents boolean value, if parent frame is last question
         '''

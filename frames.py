@@ -13,9 +13,11 @@ class QuestionFrame(QtWidgets.QFrame):
     -----------
         is_first: bool
             represents boolean value, if parent frame is first question
+            used only for the correct location of the "OK" and "Next" buttons
 
         is_last: bool
             represents boolean value, if parent frame is last question
+            used only for the correct location of the "Back", "OK" and "Results" buttons
 
         current_frame_index: int
             integer value, that represents number of the displayed frame in order
@@ -100,12 +102,18 @@ class QuestionFrame(QtWidgets.QFrame):
         -----------
             is_first: bool
                 represents boolean value, if parent frame is first question
+                used only for the correct location of the "OK" and "Next" buttons
+    
             is_last: bool
                 represents boolean value, if parent frame is last question
+                used only for the correct location of the "Back", "OK" and "Results" buttons
+
             current_frame_index: int
                 integer value, that represents number of the displayed frame in order
+
             question: str
                 string value, that represets question for current frame
+
             answer: str
                 string value, that represets answer to question for current frame
         '''
@@ -282,9 +290,10 @@ class ResultsFrame(QtWidgets.QFrame):
                        main_window) -> None:
         '''
         Parameters:
-        ===========
+        -----------
             current_frame_index: int
                 index for current instance of frame
+
             main_window: MainWindow
                 represents link to main window
         '''

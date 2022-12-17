@@ -100,6 +100,26 @@ class MainWindow(QtWidgets.QWidget):
                                      is_first: bool = False,
                                      is_last: bool = False) -> None:
         '''
+        Creates QuestionFrame object.
+        Hides it from main window layout.
+
+        Parameters:
+        -----------
+            current_frame_index: int
+                index of current frame
+
+            answer: str
+                answer for current question on frame
+
+            is_first: bool
+                represents boolean value, if parent frame is first question
+                used only for the correct location of the "OK" and "Next" buttons
+
+            is_last: bool
+                represents boolean value, if parent frame is last question
+                used only for the correct location of the "Back", "OK" and "Results" buttons
+                
+
         '''
         frame = QuestionFrame(question = question, answer = answer,
                               is_first = is_first, is_last = is_last,
@@ -121,6 +141,17 @@ class MainWindow(QtWidgets.QWidget):
         '''
         Extracts foreign word, its translation from vocabulary.
         Creates a new frame based on its index.
+
+        Parameters:
+        -----------
+            random_sequence_of_question: list
+                list, that represents mixed indexes of question from "vocabulary_{lang}.json"
+
+            vocabulary: dict
+                dictionary, that represents vocabulary json
+
+            sequence_entry_points:
+                dataclass, that represents entrypoint (0 index) and endpoint(last index) of random_sequence_of_question \
         '''
         for frame_index, random_question_index in enumerate(random_sequence_of_question):
             
